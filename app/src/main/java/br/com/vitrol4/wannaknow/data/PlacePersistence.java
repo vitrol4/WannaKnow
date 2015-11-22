@@ -19,17 +19,4 @@ public class PlacePersistence extends LinkedList<Place> {
         PlacePersistence.places.add(new Place("Place 5", "Description Place 5", new Date()));
     }
 
-    @Override
-    public boolean add(Place object) {
-        synchronized (this) {
-            return places.add(object);
-        }
-    }
-
-    @Override
-    public boolean remove(Object object) {
-        synchronized (this) {
-            return places.remove(object);
-        }
-    }
 }

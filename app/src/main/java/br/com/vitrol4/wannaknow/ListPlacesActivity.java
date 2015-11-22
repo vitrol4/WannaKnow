@@ -111,17 +111,26 @@ public class ListPlacesActivity extends ManagerLocationActivity {
             return;
         }
 
+        boolean isAdded = false;
+        Place aux = null;
         for (Place p : PlacePersistence.places) {
+            aux = p;
             if (p.getTitle().equalsIgnoreCase(place.getTitle())) {
-                PlacePersistence.places.remove(p);
-                Toast.makeText(getApplicationContext(), place.getTitle() + " foi removido a sua lista", Toast.LENGTH_SHORT).show();
-                adapter.notifyDataSetChanged();
+                isAdded = true;
             } else {
-                PlacePersistence.places.add(place);
-                Toast.makeText(getApplicationContext(), place.getTitle() + " foi adicionado a sua lista", Toast.LENGTH_SHORT).show();
-                adapter.notifyDataSetChanged();
+                isAdded = false;
             }
         }
+
+        if (isAdded) {
+            PlacePersistence.places.remove(aux);
+            Toast.makeText(getApplicationContext(), place.getTitle() + " foi removido a sua lista", Toast.LENGTH_SHORT).show();
+        } else {
+            PlacePersistence.places.add(place);
+            Toast.makeText(getApplicationContext(), place.getTitle() + " foi adicionado a sua lista", Toast.LENGTH_SHORT).show();
+        }
+
+        adapter.notifyDataSetChanged();
 
     }
 
