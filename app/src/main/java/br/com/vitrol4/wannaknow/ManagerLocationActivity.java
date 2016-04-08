@@ -19,7 +19,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -192,19 +192,36 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
     }
 
     private boolean checkPlayServices() {
-        int resultCode = GooglePlayServicesUtil
-                .isGooglePlayServicesAvailable(this);
-        if (resultCode != ConnectionResult.SUCCESS) {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+        GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
+        int result = googleAPI.isGooglePlayServicesAvailable(this);
+        if (result != ConnectionResult.SUCCESS) {
+            if (googleAPI.isUserResolvableError(result)) {
+                googleAPI.getErrorDialog(this, result,
                         PLAY_SERVICES_RESOLUTION_REQUEST).show();
             } else {
                 Toast.makeText(this, "Esse dispositivo não é suportado", Toast.LENGTH_LONG).show();
             }
+
             return false;
         }
+
         return true;
     }
+
+    /* Deprecated */
+//    private boolean checkPlayServices() {
+//        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+//        if (resultCode != ConnectionResult.SUCCESS) {
+//            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+//                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+//                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
+//            } else {
+//                Toast.makeText(this, "Esse dispositivo não é suportado", Toast.LENGTH_LONG).show();
+//            }
+//            return false;
+//        }
+//        return true;
+//    }
 
     protected void startLocationUpdates() {
         if (mGoogleApiClient != null) {
@@ -218,6 +235,7 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
 
         }
     }
+
     protected void stopLocationUpdates() {
         if (mGoogleApiClient != null) {
             if (mGoogleApiClient.isConnected()) {

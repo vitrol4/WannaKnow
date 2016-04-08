@@ -43,6 +43,12 @@ public class ListPlacesActivity extends ManagerLocationActivity {
 
     @Override
     protected void setLocation(Location location) {
+
+        if (location == null) {
+            Toast.makeText(getApplicationContext(), "Sem localização", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String clienId = "3CX0442VU1HVADWPIFRWRKIANJ0CYDSXPPNQV3QLV0R51K3I";
         String clienSecret = "GGS0VL53WWV11BBL0NSBWFCUVXRYBKPL503ZPGWNNNGBGII4";
         String v = "20130815";
@@ -76,7 +82,7 @@ public class ListPlacesActivity extends ManagerLocationActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 progressDialog.dismiss();
-                Toast.makeText(getApplicationContext(), "Ocorreu um erro. Tente novamente.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Ocorreu um erro. Verifique sua conexão com a Internet.", Toast.LENGTH_SHORT).show();
             }
         });
         progressDialog.show();
