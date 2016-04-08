@@ -1,13 +1,19 @@
 package br.com.vitrol4.wannaknow;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
@@ -25,7 +31,9 @@ import com.google.android.gms.location.LocationServices;
 public abstract class ManagerLocationActivity extends ListActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
+    public static final int PERMISSION_REQUEST_CODE = 1;
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
+    private static boolean turnGPS = true;
     private Location mLastLocation;
     // Google client to interact with Google API
     private GoogleApiClient mGoogleApiClient;
@@ -33,7 +41,27 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
     private boolean mRequestingLocationUpdates = true;
     private LocationRequest mLocationRequest;
 
-    private static boolean turnGPS = true;
+    public static boolean checkPermission() {
+        int permissionCheck = ContextCompat.checkSelfPermission(WKApplication.context, Manifest.permission.ACCESS_FINE_LOCATION);
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void requestPermission(Activity activity) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            if (checkPlayServices()) {
+                buildGoogleApiClient();
+                createLocationRequest();
+            }
+            Log.i("GPS", "ja tem permissao");
+        } else {
+            Log.i("GPS", "pedindo permissao");
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +106,20 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
         stopLocationUpdates();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    finish();
+                    startActivity(getIntent());
+                } else {
+                    Toast.makeText(ManagerLocationActivity.this, "Precisamos dessa permissão para acessar seu GPS e buscar o locais mais próximos à você.", Toast.LENGTH_LONG).show();
+                }
+                break;
+        }
+    }
+
     public void displayPromptForEnablingGPS() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final String action = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
@@ -104,11 +146,15 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
     private Location getLocation() {
         if (isGPSEnabled()) {
             if (mGoogleApiClient.isConnected()) {
-                mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                if (!checkPermission()) {
+                    requestPermission(this);
+                } else {
+                    Log.i("GPS", "request location");
+                    mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                }
             }
-            if (mLastLocation != null) {
-                return mLastLocation;
-            }
+            return mLastLocation;
+
         } else if (turnGPS) {
             displayPromptForEnablingGPS();
         }
@@ -134,7 +180,6 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
     }
 
     protected void createLocationRequest() {
-        // Location updates intervals in sec
         int UPDATE_INTERVAL = 5000; // 5 sec
         int FATEST_INTERVAL = 1000; // 1 sec
         int DISPLACEMENT = 10; // 10 meters
@@ -164,12 +209,15 @@ public abstract class ManagerLocationActivity extends ListActivity implements Go
     protected void startLocationUpdates() {
         if (mGoogleApiClient != null) {
             if (mGoogleApiClient.isConnected()) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+                if (!checkPermission()) {
+                    requestPermission(this);
+                } else {
+                    LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+                }
             }
 
         }
     }
-
     protected void stopLocationUpdates() {
         if (mGoogleApiClient != null) {
             if (mGoogleApiClient.isConnected()) {
