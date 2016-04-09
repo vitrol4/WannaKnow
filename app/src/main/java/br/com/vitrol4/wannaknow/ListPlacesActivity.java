@@ -58,7 +58,7 @@ public class ListPlacesActivity extends ManagerLocationActivity {
         Log.d("list_places", url);
 
         RequestQueue queue = Volley.newRequestQueue(this);
-        Request request = new JsonObjectRequest(Request.Method.GET, url,
+        Request request = new JsonObjectRequest(url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
